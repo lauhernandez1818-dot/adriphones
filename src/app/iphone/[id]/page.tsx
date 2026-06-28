@@ -9,10 +9,10 @@ import {
   Unlock,
   Package,
   Sparkles,
-  MessageCircle,
   CreditCard,
 } from "lucide-react";
 import { PageShell, PrimaryButton, Card, WhatsAppButton } from "@/components/layout";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { PhoneGallery } from "@/components/phone-card";
 import { formatPrice, getUnit } from "@/lib/data";
 import { getUnitMedia } from "@/lib/media";
@@ -89,7 +89,7 @@ export default async function iPhoneDetailPage({
                 Comprar / Reservar
               </PrimaryButton>
               <WhatsAppButton href="https://wa.me/34600000000">
-                <MessageCircle className="h-4 w-4" />
+                <WhatsAppIcon className="h-5 w-5" />
                 Consultar por WhatsApp
               </WhatsAppButton>
             </div>

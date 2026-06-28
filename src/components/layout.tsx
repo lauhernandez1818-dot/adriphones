@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { MessageCircle } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
+import { WhatsAppIcon } from "./whatsapp-icon";
 
 const LOGO = "/media/LOGOADRI.jpg";
 
@@ -48,7 +48,7 @@ export function SiteHeader() {
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-2 text-xs font-semibold text-white transition hover:opacity-90 sm:text-sm"
           >
-            <MessageCircle className="h-4 w-4" />
+            <WhatsAppIcon className="h-4 w-4" />
             <span className="hidden sm:inline">WhatsApp</span>
           </a>
         </div>
