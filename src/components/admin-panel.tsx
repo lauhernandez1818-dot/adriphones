@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Plus,
   Pencil,
@@ -19,6 +19,11 @@ import { Card, PrimaryButton } from "@/components/layout";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import type { iPhoneUnit, SellRequest, UnitStatus } from "@/lib/data";
 import { formatPrice } from "@/lib/data";
+import {
+  getSoldIdsFromStorage,
+  markUnitSoldInStore,
+  unmarkUnitSoldInStore,
+} from "@/lib/inventory-store";
 
 type AdminPanelProps = {
   initialUnits: iPhoneUnit[];
@@ -46,6 +51,16 @@ export function AdminPanel({ initialUnits, initialRequests }: AdminPanelProps) {
     color: "",
     price: "",
   });
+
+  useEffect(() => {
+    const soldIds = getSoldIdsFromStorage();
+    if (soldIds.size === 0) return;
+    setInventory((prev) =>
+      prev.map((u) =>
+        soldIds.has(u.id) ? { ...u, status: "sold" as UnitStatus } : u,
+      ),
+    );
+  }, []);
 
   const activeInventory = inventory.filter((u) => u.status !== "sold");
   const soldInventory = inventory.filter((u) => u.status === "sold");
@@ -88,11 +103,13 @@ export function AdminPanel({ initialUnits, initialRequests }: AdminPanelProps) {
     setInventory((prev) =>
       prev.map((u) => (u.id === id ? { ...u, status: "sold" as UnitStatus } : u)),
     );
+    markUnitSoldInStore(id);
 
     notify(`"${unit.model}" movido a archivadas`, () => {
       setInventory((prev) =>
         prev.map((u) => (u.id === id ? { ...u, status: "available" as UnitStatus } : u)),
       );
+      unmarkUnitSoldInStore(id);
       setTab("activo");
       notify("Venta deshecha — de vuelta en inventario");
     });
@@ -102,6 +119,7 @@ export function AdminPanel({ initialUnits, initialRequests }: AdminPanelProps) {
     setInventory((prev) =>
       prev.map((u) => (u.id === id ? { ...u, status: "available" as UnitStatus } : u)),
     );
+    unmarkUnitSoldInStore(id);
     setTab("activo");
     notify("iPhone restaurado al inventario activo");
   }

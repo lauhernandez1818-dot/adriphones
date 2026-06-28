@@ -9,11 +9,10 @@ import {
   Unlock,
   Package,
   Sparkles,
-  CreditCard,
 } from "lucide-react";
-import { PageShell, PrimaryButton, Card, WhatsAppButton } from "@/components/layout";
-import { WhatsAppIcon } from "@/components/whatsapp-icon";
+import { PageShell, Card } from "@/components/layout";
 import { PhoneGallery } from "@/components/phone-card";
+import { ProductActions } from "@/components/product-actions";
 import { formatPrice, getUnit } from "@/lib/data";
 import { getUnitMedia } from "@/lib/media";
 
@@ -27,8 +26,6 @@ export default async function iPhoneDetailPage({
   if (!unit) notFound();
 
   const media = getUnitMedia(id);
-
-  const canBuy = unit.status === "available";
 
   const specs = [
     { icon: Battery, label: "Batería", value: `${unit.battery}%` },
@@ -82,22 +79,7 @@ export default async function iPhoneDetailPage({
             ))}
           </Card>
 
-          {canBuy ? (
-            <div className="mt-6 space-y-3">
-              <PrimaryButton className="flex w-full items-center justify-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                Comprar / Reservar
-              </PrimaryButton>
-              <WhatsAppButton href="https://wa.me/34600000000">
-                <WhatsAppIcon className="h-5 w-5" />
-                Consultar por WhatsApp
-              </WhatsAppButton>
-            </div>
-          ) : (
-            <p className="mt-6 rounded-xl bg-background px-4 py-3 text-center text-sm text-muted">
-              Esta unidad ya no está disponible
-            </p>
-          )}
+          <ProductActions unitId={unit.id} />
         </div>
       </div>
     </PageShell>
