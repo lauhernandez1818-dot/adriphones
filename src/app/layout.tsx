@@ -11,6 +11,11 @@ export const metadata: Metadata = {
   title: "AdriiPhones — Compra y vende tu iPhone",
   description:
     "Plataforma para comprar y vender iPhones originales. Unidades únicas, tasación orientativa y gestión sencilla.",
+  icons: {
+    icon: [{ url: "/media/LOGOADRI.jpg", type: "image/jpeg" }],
+    apple: [{ url: "/media/LOGOADRI.jpg", type: "image/jpeg" }],
+    shortcut: ["/media/LOGOADRI.jpg"],
+  },
 };
 
 export const viewport: Viewport = {

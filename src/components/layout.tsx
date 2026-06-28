@@ -1,5 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { MessageCircle } from "lucide-react";
+
+const LOGO = "/media/LOGOADRI.jpg";
 
 const nav = [
   { href: "/", label: "Tienda" },
@@ -12,8 +15,18 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-[#d2d2d7]/60 bg-white/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3.5 sm:px-6">
-        <Link href="/" className="text-sm font-bold tracking-tight sm:text-base">
-          AdriiPhones
+        <Link href="/" className="flex items-center gap-2.5">
+          <Image
+            src={LOGO}
+            alt="AdriiPhones"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-lg object-cover"
+            priority
+          />
+          <span className="hidden text-sm font-bold tracking-tight sm:inline sm:text-base">
+            AdriiPhones
+          </span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm text-[#86868b] md:flex">
           {nav.map((item) => (
