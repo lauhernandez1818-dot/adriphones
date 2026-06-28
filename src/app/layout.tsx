@@ -8,15 +8,15 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "AdriiPhones — Boceto V1",
+  title: "AdriiPhones — Compra y vende tu iPhone",
   description:
-    "Boceto funcional V1 para AdriiPhones. Catálogo de unidades únicas, panel admin, tasación y formulario de venta.",
+    "Plataforma para comprar y vender iPhones originales. Unidades únicas, tasación orientativa y gestión sencilla.",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#000000",
+  themeColor: "#f5f5f7",
 };
 
 export default function RootLayout({
@@ -26,7 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${geist.variable} h-full`}>
-      <body className="min-h-full bg-black font-sans antialiased">{children}</body>
+      <body className="min-h-full bg-[#f5f5f7] font-sans text-[#1d1d1f] antialiased">
+        {children}
+      </body>
     </html>
   );
 }

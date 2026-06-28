@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# temp / tools
+temp-video.mp4
+video-frames/
+yt-dlp.exe
+extract-frames.cjs

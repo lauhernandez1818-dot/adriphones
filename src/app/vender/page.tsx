@@ -1,126 +1,271 @@
 "use client";
 
-import { useState } from "react";
-import { Send, Upload } from "lucide-react";
-import { PageShell } from "@/components/layout";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import {
-  models,
+  PageShell,
+  PageTitle,
+  Card,
+  PrimaryButton,
+  GhostButton,
+} from "@/components/layout";
+import { StepWizard } from "@/components/step-wizard";
+import {
+  sellModels,
   storageOptions,
-  aestheticOptions,
-  accessoryOptions,
+  conditionOptions,
+  extrasOptions,
+  estimatePrice,
+  formatPrice,
+  batteryLabel,
+  type SellExtras,
 } from "@/lib/data";
 
-export default function SellPage() {
-  const [sent, setSent] = useState(false);
+const steps = [
+  { id: "model", label: "Modelo" },
+  { id: "storage", label: "Capacidad" },
+  { id: "battery", label: "Batería" },
+  { id: "extras", label: "Extras" },
+];
 
-  if (sent) {
-    return (
-      <PageShell>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
-            <Send className="h-7 w-7" />
-          </div>
-          <h1 className="mt-5 text-xl font-bold">Solicitud enviada</h1>
-          <p className="mt-2 max-w-xs text-sm text-zinc-500">
-            AdriiPhones revisará tu iPhone y te responderá con una oferta desde el panel admin.
-          </p>
-          <button
-            type="button"
-            onClick={() => setSent(false)}
-            className="mt-6 text-sm font-semibold text-white underline-offset-4 hover:underline"
-          >
-            Enviar otra solicitud
-          </button>
-        </div>
-      </PageShell>
-    );
+export default function SellPage() {
+  const [step, setStep] = useState(0);
+  const [model, setModel] = useState<string | null>(null);
+  const [storage, setStorage] = useState<string | null>(null);
+  const [battery, setBattery] = useState(91);
+  const [condition, setCondition] = useState<string | null>(null);
+  const [extras, setExtras] = useState<SellExtras>({
+    box: false,
+    charger: false,
+    invoice: false,
+  });
+  const [showResult, setShowResult] = useState(false);
+
+  const price = useMemo(() => {
+    if (!model || !storage || !condition) return 0;
+    return estimatePrice(model, storage, battery, condition, extras);
+  }, [model, storage, battery, condition, extras]);
+
+  function toggleExtra(key: keyof SellExtras) {
+    setExtras((prev) => ({ ...prev, [key]: !prev[key] }));
+    setShowResult(false);
   }
+
+  function next() {
+    if (step < steps.length - 1) setStep(step + 1);
+    else setShowResult(true);
+  }
+
+  function back() {
+    if (showResult) {
+      setShowResult(false);
+      return;
+    }
+    if (step > 0) setStep(step - 1);
+  }
+
+  const canNext =
+    (step === 0 && model) ||
+    (step === 1 && storage) ||
+    (step === 2) ||
+    (step === 3);
 
   return (
     <PageShell>
-      <header className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Compra</p>
-        <h1 className="mt-1 text-2xl font-black tracking-tight">Véndeme tu iPhone</h1>
-        <p className="mt-2 text-sm text-zinc-500">
-          Cuéntame los detalles y te hago una oferta personalizada
-        </p>
-      </header>
+      <PageTitle
+        title="Vende tu iPhone"
+        subtitle="Te lo compramos al mejor precio. Sin complicaciones."
+      />
 
-      <form
-        className="space-y-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setSent(true);
-        }}
-      >
-        <Field label="Modelo">
-          <select className={inputClass} defaultValue={models[0]}>
-            {models.map((m) => (
-              <option key={m}>{m}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Capacidad">
-          <select className={inputClass} defaultValue="256 GB">
-            {storageOptions.map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Batería (%)">
-          <input type="number" className={inputClass} defaultValue={92} min={0} max={100} />
-        </Field>
-        <Field label="Estado estético">
-          <select className={inputClass} defaultValue="Buen estado">
-            {aestheticOptions.map((o) => (
-              <option key={o}>{o}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="¿Caja original?">
-          <select className={inputClass} defaultValue="Sí">
-            <option>Sí</option>
-            <option>No</option>
-          </select>
-        </Field>
-        <Field label="Accesorios incluidos">
-          <select className={inputClass} defaultValue="Caja + cable">
-            {accessoryOptions.map((o) => (
-              <option key={o}>{o}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Fotos del móvil">
-          <label className={`${inputClass} flex cursor-pointer items-center justify-center gap-2 border-dashed text-zinc-500`}>
-            <Upload className="h-4 w-4" />
-            Subir fotos
-            <input type="file" className="hidden" accept="image/*" multiple />
-          </label>
-        </Field>
-        <Field label="WhatsApp o email">
-          <input type="text" className={inputClass} placeholder="+34 600 000 000" />
-        </Field>
+      <Card className="mx-auto max-w-xl">
+        {!showResult && <StepWizard steps={steps} current={step} />}
 
-        <button
-          type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 text-sm font-bold text-black transition hover:bg-zinc-100"
-        >
-          <Send className="h-4 w-4" />
-          Enviar solicitud
-        </button>
-      </form>
+        {showResult ? (
+          <ResultView price={price} model={model!} onBack={back} />
+        ) : (
+          <>
+            {step === 0 && (
+              <div>
+                <h2 className="mb-5 text-center text-lg font-semibold">
+                  ¿Qué modelo tienes?
+                </h2>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {sellModels.map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setModel(m)}
+                      className={`rounded-xl border px-3 py-3.5 text-sm font-medium transition ${
+                        model === m
+                          ? "border-[#0071e3] bg-[#0071e3]/5 text-[#0071e3] ring-2 ring-[#0071e3]/20"
+                          : "border-[#d2d2d7] hover:border-[#86868b]"
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {step === 1 && (
+              <div>
+                <h2 className="mb-5 text-center text-lg font-semibold">
+                  ¿Cuánta capacidad tiene?
+                </h2>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {storageOptions.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setStorage(s)}
+                      className={`rounded-xl border px-5 py-3 text-sm font-semibold transition ${
+                        storage === s
+                          ? "border-[#0071e3] bg-[#0071e3] text-white"
+                          : "border-[#d2d2d7] hover:border-[#86868b]"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="text-center">
+                <h2 className="mb-6 text-lg font-semibold">
+                  ¿Qué salud de batería tiene?
+                </h2>
+                <p className="text-5xl font-bold text-emerald-500">{battery}%</p>
+                <input
+                  type="range"
+                  min={70}
+                  max={100}
+                  value={battery}
+                  onChange={(e) => setBattery(Number(e.target.value))}
+                  className="mx-auto mt-8 w-full max-w-sm"
+                />
+                <p className="mt-4 text-sm text-[#86868b]">{batteryLabel(battery)}</p>
+
+                <div className="mt-8 text-left">
+                  <h3 className="mb-3 text-sm font-semibold text-[#86868b]">
+                    Estado estético
+                  </h3>
+                  <div className="space-y-2">
+                    {conditionOptions.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setCondition(c.id)}
+                        className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition ${
+                          condition === c.id
+                            ? "border-[#0071e3] bg-[#0071e3]/5"
+                            : "border-[#d2d2d7] hover:border-[#86868b]"
+                        }`}
+                      >
+                        <span className="text-sm font-medium">{c.label}</span>
+                        <span className="text-xs text-[#86868b]">{c.hint}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div>
+                <h2 className="mb-5 text-center text-lg font-semibold">
+                  ¿Qué incluyes con el iPhone?
+                </h2>
+                <div className="space-y-3">
+                  {extrasOptions.map((item) => {
+                    const key = item.id as keyof SellExtras;
+                    const checked = extras[key];
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => toggleExtra(key)}
+                        className={`flex w-full items-center justify-between rounded-xl border px-4 py-4 text-left transition ${
+                          checked
+                            ? "border-[#0071e3] bg-[#0071e3]/5"
+                            : "border-[#d2d2d7] hover:border-[#86868b]"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`flex h-5 w-5 items-center justify-center rounded border ${
+                              checked
+                                ? "border-[#0071e3] bg-[#0071e3]"
+                                : "border-[#d2d2d7]"
+                            }`}
+                          >
+                            {checked && (
+                              <span className="text-[10px] font-bold text-white">✓</span>
+                            )}
+                          </div>
+                          <span className="text-sm font-medium">{item.label}</span>
+                        </div>
+                        <span className="text-xs text-[#86868b]">{item.note}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-8 flex items-center justify-between">
+              {step > 0 || showResult ? (
+                <GhostButton onClick={back} className="inline-flex items-center gap-1">
+                  <ArrowLeft className="h-4 w-4" />
+                  Atrás
+                </GhostButton>
+              ) : (
+                <span />
+              )}
+              <PrimaryButton
+                onClick={next}
+                disabled={!canNext || (step === 2 && !condition)}
+                className="inline-flex items-center gap-2"
+              >
+                {step === steps.length - 1 ? "Ver mi tasación" : "Siguiente"}
+                {step < steps.length - 1 && <ArrowRight className="h-4 w-4" />}
+              </PrimaryButton>
+            </div>
+          </>
+        )}
+      </Card>
     </PageShell>
   );
 }
 
-const inputClass =
-  "w-full rounded-xl border border-white/10 bg-zinc-950 px-4 py-3.5 text-sm text-white outline-none transition focus:border-white/25";
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function ResultView({
+  price,
+  model,
+  onBack,
+}: {
+  price: number;
+  model: string;
+  onBack: () => void;
+}) {
   return (
-    <div>
-      <label className="mb-2 block text-xs font-medium text-zinc-500">{label}</label>
-      {children}
+    <div className="text-center">
+      <p className="text-sm font-medium text-[#86868b]">Tu tasación orientativa</p>
+      <p className="mt-2 text-5xl font-bold text-[#0071e3]">{formatPrice(price)}</p>
+      <p className="mt-2 text-sm text-[#86868b]">
+        {model} · Orientativa, no vinculante · sujeta a revisión
+      </p>
+      <div className="mt-8 space-y-3">
+        <PrimaryButton className="w-full">Aceptar oferta y continuar</PrimaryButton>
+        <GhostButton onClick={onBack} className="w-full">
+          Modificar datos
+        </GhostButton>
+      </div>
+      <p className="mt-6 text-xs text-[#86868b]">
+        Te contactaremos por WhatsApp para confirmar el estado del dispositivo
+      </p>
     </div>
   );
 }

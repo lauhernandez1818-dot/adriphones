@@ -1,0 +1,9 @@
+Pon aqui los archivos de este iPhone.
+
+Nombres exactos:
+  01-cover.mp4  o  01-cover.jpg   -> story anuncio (movil/caja)
+  02-ficha.jpg                    -> story ficha (specs + precio)
+
+Opcional:
+  03-detalle-1.jpg
+  04-detalle-2.jpg

@@ -1,6 +1,5 @@
 import { Plus, Pencil, CheckCircle2, Inbox } from "lucide-react";
-import { PageShell } from "@/components/layout";
-import { StatusBadge } from "@/components/status-badge";
+import { PageShell, PageTitle, Card, PrimaryButton } from "@/components/layout";
 import { units, sellRequests, formatPrice } from "@/lib/data";
 
 export default function AdminPage() {
@@ -8,83 +7,85 @@ export default function AdminPage() {
   const sold = units.filter((u) => u.status === "sold").length;
 
   return (
-    <PageShell>
-      <header className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Gestión</p>
-        <h1 className="mt-1 text-2xl font-black tracking-tight">Panel admin</h1>
-        <p className="mt-2 text-sm text-zinc-500">Gestiona stock y solicitudes desde el móvil</p>
-      </header>
+    <PageShell admin>
+      <PageTitle title="Panel admin" subtitle="Gestiona stock y solicitudes" />
 
-      <div className="mb-6 grid grid-cols-3 gap-2">
+      <div className="mb-6 grid grid-cols-3 gap-3">
         <Stat value={available} label="En stock" />
         <Stat value={sold} label="Vendidos" />
         <Stat value={sellRequests.length} label="Solicitudes" />
       </div>
 
-      <button
-        type="button"
-        className="mb-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3.5 text-sm font-bold text-black"
-      >
+      <PrimaryButton className="mb-6 inline-flex items-center gap-2">
         <Plus className="h-4 w-4" />
         Añadir iPhone
-      </button>
+      </PrimaryButton>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-zinc-500">Inventario</h2>
-        <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-950">
-          {units.map((unit, i) => (
-            <div
-              key={unit.id}
-              className={`flex items-start justify-between gap-3 p-4 ${i > 0 ? "border-t border-white/5" : ""}`}
-            >
-              <div className="min-w-0 flex-1">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-[#86868b]">
+          Inventario
+        </h2>
+        <Card className="!p-0 divide-y divide-[#d2d2d7]/60">
+          {units.map((unit) => (
+            <div key={unit.id} className="flex items-start justify-between gap-4 p-5">
+              <div>
                 <p className="font-semibold">
                   {unit.model} · {unit.condition}
                 </p>
-                <p className="mt-0.5 text-xs text-zinc-500">
+                <p className="mt-1 text-sm text-[#86868b]">
                   {unit.storage} · Bat. {unit.battery}% · {formatPrice(unit.price)}
                 </p>
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <Action icon={Pencil} label="Editar" />
                   {unit.status !== "sold" && (
-                    <Action icon={CheckCircle2} label="Marcar vendido" danger />
+                    <Action icon={CheckCircle2} label="Marcar vendido" primary />
                   )}
                 </div>
               </div>
-              <StatusBadge status={unit.status} />
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${
+                  unit.status === "available"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : unit.status === "sold"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-amber-100 text-amber-700"
+                }`}
+              >
+                {unit.status === "available" ? "Disponible" : unit.status === "sold" ? "Vendido" : "Reservado"}
+              </span>
             </div>
           ))}
-        </div>
+        </Card>
       </section>
 
       <section>
-        <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-zinc-500">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-[#86868b]">
           Solicitudes de venta
         </h2>
         <div className="space-y-3">
           {sellRequests.map((req) => (
-            <div
-              key={req.id}
-              className="rounded-2xl border border-white/8 bg-zinc-950 p-4"
-            >
+            <Card key={req.id} className="!p-5">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="font-semibold">
                     {req.model} · {req.storage}
                   </p>
-                  <p className="mt-1 text-xs text-zinc-500">
-                    Bat. {req.battery}% · {req.condition} · {req.box ? "Con caja" : "Sin caja"} ·{" "}
-                    {req.accessories}
+                  <p className="mt-1 text-sm text-[#86868b]">
+                    Bat. {req.battery}% · {req.condition}
                   </p>
-                  <p className="mt-1 text-xs text-zinc-600">{req.time}</p>
+                  <p className="mt-1 text-xs text-[#86868b]">
+                    {req.box ? "Con caja" : "Sin caja"} ·{" "}
+                    {req.charger ? "Con cargador" : "Sin cargador"} ·{" "}
+                    {req.invoice ? "Con factura" : "Sin factura"} · {req.time}
+                  </p>
                 </div>
-                <Inbox className="h-4 w-4 shrink-0 text-zinc-600" />
+                <Inbox className="h-4 w-4 shrink-0 text-[#86868b]" />
               </div>
               <div className="mt-3 flex gap-2">
                 <Action icon={Inbox} label="Ver fotos" />
-                <Action icon={Pencil} label="Responder" />
+                <Action icon={Pencil} label="Responder" primary />
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       </section>
@@ -94,35 +95,33 @@ export default function AdminPage() {
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="rounded-2xl border border-white/8 bg-zinc-950 px-2 py-4 text-center">
-      <p className="text-2xl font-black">{value}</p>
-      <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-zinc-500">{label}</p>
-    </div>
+    <Card className="!p-4 text-center">
+      <p className="text-2xl font-bold">{value}</p>
+      <p className="mt-1 text-xs font-medium text-[#86868b]">{label}</p>
+    </Card>
   );
 }
 
 function Action({
   icon: Icon,
   label,
-  danger,
+  primary,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
-  danger?: boolean;
+  primary?: boolean;
 }) {
   return (
     <button
       type="button"
-      className={`rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${
-        danger
-          ? "border-red-500/30 text-red-400"
-          : "border-white/10 text-zinc-400 hover:text-white"
+      className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${
+        primary
+          ? "bg-[#0071e3]/10 text-[#0071e3]"
+          : "bg-[#f5f5f7] text-[#86868b] hover:text-[#1d1d1f]"
       }`}
     >
-      <span className="inline-flex items-center gap-1">
-        <Icon className="h-3 w-3" />
-        {label}
-      </span>
+      <Icon className="h-3 w-3" />
+      {label}
     </button>
   );
 }

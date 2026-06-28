@@ -1,0 +1,14 @@
+MEDIA — AdriiPhones
+====================
+
+Mete fotos/videos en cada carpeta con estos nombres:
+  01-cover.mp4 o 01-cover.jpg  = story anuncio
+  02-ficha.jpg                 = story ficha specs
+
+Carpetas:
+  iphone-air/              iPhone Air
+  iphone-13/               iPhone 13
+  17-pro-max-precintado/   iPhone 17 Pro Max (precintado)
+  15-pro-max/              iPhone 15 Pro Max
+
+Cuando termines avisa.
