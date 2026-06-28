@@ -163,7 +163,7 @@ export function WhatsAppButton({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#25D366] bg-[#25D366]/10 py-3.5 text-sm font-semibold text-[#128C7E] transition hover:bg-[#25D366] hover:text-white dark:border-[#25D366] dark:bg-[#25D366]/20 dark:text-[#5eead4] dark:hover:bg-[#25D366] dark:hover:text-white ${className}`}
+      className={`flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#25D366] bg-[#25D366] py-3.5 text-sm font-semibold text-white shadow-sm shadow-[#25D366]/25 transition hover:border-[#1da851] hover:bg-[#1da851] ${className}`}
       {...props}
     >
       {children}
