@@ -98,8 +98,8 @@ export type SellRequest = {
 export const sellRequests: SellRequest[] = [
   {
     id: "req-1",
-    model: "iPhone 14",
-    storage: "256 GB",
+    model: "iPhone 13",
+    storage: "128 GB",
     battery: 84,
     condition: "Buen estado",
     box: false,
@@ -109,8 +109,8 @@ export const sellRequests: SellRequest[] = [
   },
   {
     id: "req-2",
-    model: "iPhone 13 Pro",
-    storage: "128 GB",
+    model: "iPhone 15 Pro Max",
+    storage: "256 GB",
     battery: 78,
     condition: "Marcas visibles",
     box: true,
@@ -120,6 +120,16 @@ export const sellRequests: SellRequest[] = [
   },
 ];
 
+/** Modelos del inventario real (carpetas en public/media/) */
+export const inventoryModels = units.map((u) => ({
+  id: u.id,
+  model: u.model,
+  condition: u.condition,
+  storage: u.storage,
+  price: u.price,
+}));
+
+/** Modelos para tasación — cualquier iPhone que quiera venderte un cliente */
 export const sellModels = [
   "iPhone 12",
   "iPhone 13",
@@ -130,9 +140,41 @@ export const sellModels = [
   "iPhone 16",
   "iPhone 16 Pro",
   "iPhone 17 Pro Max",
+  "iPhone Air",
 ];
 
-export const storageOptions = ["64 GB", "128 GB", "256 GB", "512 GB", "1 TB"];
+/** Capacidades reales por modelo (Apple) */
+export const storageByModel: Record<string, string[]> = {
+  "iPhone 17 Pro Max": ["256 GB", "512 GB", "1 TB"],
+  "iPhone 16 Pro": ["128 GB", "256 GB", "512 GB", "1 TB"],
+  "iPhone 16": ["128 GB", "256 GB", "512 GB"],
+  "iPhone 15 Pro Max": ["256 GB", "512 GB", "1 TB"],
+  "iPhone 15 Pro": ["128 GB", "256 GB", "512 GB", "1 TB"],
+  "iPhone 15": ["128 GB", "256 GB", "512 GB"],
+  "iPhone 14": ["128 GB", "256 GB", "512 GB"],
+  "iPhone 13": ["128 GB", "256 GB", "512 GB"],
+  "iPhone 12": ["64 GB", "128 GB", "256 GB"],
+  "iPhone Air": ["256 GB", "512 GB"],
+};
+
+export function getStorageOptionsForModel(model: string | null): string[] {
+  if (!model) return [];
+  return storageByModel[model] ?? ["128 GB", "256 GB", "512 GB"];
+}
+
+/** Capacidad mínima de fábrica por modelo (base tasación) */
+const baseStorageByModel: Record<string, string> = {
+  "iPhone 17 Pro Max": "256 GB",
+  "iPhone 16 Pro": "128 GB",
+  "iPhone 16": "128 GB",
+  "iPhone 15 Pro Max": "256 GB",
+  "iPhone 15 Pro": "128 GB",
+  "iPhone 15": "128 GB",
+  "iPhone 14": "128 GB",
+  "iPhone 13": "128 GB",
+  "iPhone 12": "64 GB",
+  "iPhone Air": "256 GB",
+};
 
 export const conditionOptions = [
   { id: "como-nuevo", label: "Como nuevo", hint: "Sin marcas visibles" },
@@ -184,7 +226,6 @@ export function estimatePrice(
 ): number {
   const base: Record<string, number> = {
     "iPhone 17 Pro Max": 1100,
-    "iPhone 17 Pro": 950,
     "iPhone 16 Pro": 850,
     "iPhone 16": 650,
     "iPhone 15 Pro Max": 780,
@@ -193,14 +234,24 @@ export function estimatePrice(
     "iPhone 14": 400,
     "iPhone 13": 320,
     "iPhone 12": 260,
+    "iPhone Air": 900,
   };
 
   let price = base[model] ?? 350;
 
-  if (storage === "512 GB") price += 80;
-  if (storage === "1 TB") price += 150;
-  if (storage === "64 GB") price -= 30;
-  if (storage === "128 GB") price -= 15;
+  const baseStorage = baseStorageByModel[model] ?? "128 GB";
+  const options = getStorageOptionsForModel(model);
+  const baseIndex = options.indexOf(baseStorage);
+  const selectedIndex = options.indexOf(storage);
+
+  if (baseIndex >= 0 && selectedIndex > baseIndex) {
+    if (storage === "512 GB") price += 80;
+    if (storage === "1 TB") price += 150;
+    if (storage === "256 GB" && baseStorage === "64 GB") price += 40;
+    if (storage === "128 GB" && baseStorage === "64 GB") price += 15;
+  } else if (baseIndex >= 0 && selectedIndex >= 0 && selectedIndex < baseIndex) {
+    price -= 20 * (baseIndex - selectedIndex);
+  }
 
   if (battery >= 95) price += 30;
   else if (battery >= 85) price += 10;
@@ -221,6 +272,21 @@ export function estimatePrice(
   return Math.max(120, Math.round(price));
 }
 
+export function estimatePriceRange(
+  model: string,
+  storage: string,
+  battery: number,
+  conditionId: string,
+  extras: SellExtras,
+) {
+  const price = estimatePrice(model, storage, battery, conditionId, extras);
+  const spread = Math.max(15, Math.round(price * 0.05));
+  return {
+    min: Math.max(120, price - spread),
+    max: price + spread,
+  };
+}
+
 export function formatPrice(amount: number) {
   return new Intl.NumberFormat("es-ES", {
     style: "currency",
@@ -233,9 +299,20 @@ export function getUnit(id: string) {
   return units.find((u) => u.id === id);
 }
 
+export function getUnitByModel(model: string) {
+  return units.find((u) => u.model === model);
+}
+
 export function modelFilterKey(model: string) {
   const match = model.match(/iPhone (\d+)/);
   return match ? `iPhone ${match[1]}` : model;
 }
 
-export const catalogFilters = ["Todos", "iPhone 17", "iPhone 15", "iPhone Air", "iPhone 13"];
+export const catalogFilters = [
+  "Todos",
+  "Precintados",
+  "iPhone 17 Pro Max",
+  "iPhone 15 Pro Max",
+  "iPhone Air",
+  "iPhone 13",
+];

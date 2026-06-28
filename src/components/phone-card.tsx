@@ -11,9 +11,9 @@ export function PhoneCard({ unit, media }: { unit: iPhoneUnit; media: UnitMedia 
   return (
     <Link
       href={sold ? "#" : `/iphone/${unit.id}`}
-      className={`group block overflow-hidden rounded-2xl border border-[#d2d2d7]/80 bg-white shadow-sm transition hover:shadow-md ${sold ? "pointer-events-none opacity-55" : ""}`}
+      className={`group block overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-accent/10 ${sold ? "pointer-events-none opacity-55" : ""}`}
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-[#f5f5f7]">
+      <div className="relative aspect-[4/5] overflow-hidden bg-background">
         {image ? (
           media.cover?.endsWith(".mp4") && !media.ficha ? (
             <video
@@ -34,12 +34,12 @@ export function PhoneCard({ unit, media }: { unit: iPhoneUnit; media: UnitMedia 
             />
           )
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-[#86868b]">
+          <div className="flex h-full items-center justify-center text-sm text-muted">
             Sin foto
           </div>
         )}
         {unit.featured && (
-          <span className="absolute left-3 top-3 rounded-full bg-[#0071e3] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+          <span className="absolute left-3 top-3 rounded-full bg-accent px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-md">
             Nuevo
           </span>
         )}
@@ -51,7 +51,7 @@ export function PhoneCard({ unit, media }: { unit: iPhoneUnit; media: UnitMedia 
       </div>
       <div className="p-5">
         <h3 className="text-lg font-bold tracking-tight">{unit.model}</h3>
-        <p className="mt-1 text-sm text-[#86868b]">
+        <p className="mt-1 text-sm text-muted">
           {unit.storage} · {unit.color}
         </p>
         <p className="mt-0.5 text-xs text-[#86868b]">
@@ -61,7 +61,7 @@ export function PhoneCard({ unit, media }: { unit: iPhoneUnit; media: UnitMedia 
         <div className="mt-4 flex items-center justify-between">
           <span className="text-xl font-bold">{formatPrice(unit.price)}</span>
           {!sold && (
-            <span className="rounded-full bg-[#0071e3] px-4 py-2 text-xs font-semibold text-white transition group-hover:bg-[#0077ed]">
+            <span className="rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white shadow-md transition group-hover:opacity-90">
               Comprar
             </span>
           )}

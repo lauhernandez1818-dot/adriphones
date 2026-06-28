@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PhoneCard } from "@/components/phone-card";
-import { catalogFilters, modelFilterKey } from "@/lib/data";
+import { catalogFilters } from "@/lib/data";
 import type { iPhoneUnit } from "@/lib/data";
 import type { UnitMedia } from "@/lib/media";
 
@@ -13,8 +13,10 @@ export function CatalogClient({ items }: { items: Item[] }) {
 
   const filtered = items.filter(({ unit }) => {
     if (filter === "Todos") return true;
-    if (filter === "iPhone Air") return unit.model === "iPhone Air";
-    return modelFilterKey(unit.model).startsWith(filter);
+    if (filter === "Precintados") {
+      return unit.condition.toLowerCase().includes("precintado");
+    }
+    return unit.model === filter;
   });
 
   return (
@@ -27,8 +29,8 @@ export function CatalogClient({ items }: { items: Item[] }) {
             onClick={() => setFilter(f)}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
               filter === f
-                ? "bg-[#1d1d1f] text-white"
-                : "bg-white text-[#86868b] ring-1 ring-[#d2d2d7] hover:text-[#1d1d1f]"
+                ? "bg-foreground text-background shadow-md"
+                : "bg-card text-muted ring-1 ring-border hover:text-foreground"
             }`}
           >
             {f}
