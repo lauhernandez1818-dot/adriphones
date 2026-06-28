@@ -10,6 +10,9 @@ import {
   ShieldCheck,
   X,
   ImageIcon,
+  Undo2,
+  Archive,
+  RotateCcw,
 } from "lucide-react";
 import { adminLogout } from "@/app/admin/actions";
 import { Card, PrimaryButton } from "@/components/layout";
@@ -23,14 +26,17 @@ type AdminPanelProps = {
 };
 
 type ModalKind = "add" | "edit" | "photos" | null;
+type AdminTab = "activo" | "archivadas";
 
 export function AdminPanel({ initialUnits, initialRequests }: AdminPanelProps) {
   const [inventory, setInventory] = useState(initialUnits);
   const [requests, setRequests] = useState(initialRequests);
+  const [archivedRequests, setArchivedRequests] = useState<SellRequest[]>([]);
+  const [tab, setTab] = useState<AdminTab>("activo");
   const [modal, setModal] = useState<ModalKind>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [photoRequest, setPhotoRequest] = useState<SellRequest | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; undo?: () => void } | null>(null);
 
   const [form, setForm] = useState({
     model: "",
@@ -41,12 +47,13 @@ export function AdminPanel({ initialUnits, initialRequests }: AdminPanelProps) {
     price: "",
   });
 
-  const available = inventory.filter((u) => u.status === "available").length;
-  const sold = inventory.filter((u) => u.status === "sold").length;
+  const activeInventory = inventory.filter((u) => u.status !== "sold");
+  const soldInventory = inventory.filter((u) => u.status === "sold");
+  const archivedCount = soldInventory.length + archivedRequests.length;
 
-  function notify(message: string) {
-    setToast(message);
-    window.setTimeout(() => setToast(null), 2800);
+  function notify(message: string, undo?: () => void) {
+    setToast({ message, undo });
+    window.setTimeout(() => setToast(null), undo ? 5000 : 2800);
   }
 
   function openAdd() {
@@ -75,10 +82,28 @@ export function AdminPanel({ initialUnits, initialRequests }: AdminPanelProps) {
   }
 
   function markSold(id: string) {
+    const unit = inventory.find((u) => u.id === id);
+    if (!unit || unit.status === "sold") return;
+
     setInventory((prev) =>
       prev.map((u) => (u.id === id ? { ...u, status: "sold" as UnitStatus } : u)),
     );
-    notify("Unidad marcada como vendida");
+
+    notify(`"${unit.model}" movido a archivadas`, () => {
+      setInventory((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, status: "available" as UnitStatus } : u)),
+      );
+      setTab("activo");
+      notify("Venta deshecha — de vuelta en inventario");
+    });
+  }
+
+  function restoreSold(id: string) {
+    setInventory((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, status: "available" as UnitStatus } : u)),
+    );
+    setTab("activo");
+    notify("iPhone restaurado al inventario activo");
   }
 
   function saveUnit() {
@@ -138,9 +163,22 @@ export function AdminPanel({ initialUnits, initialRequests }: AdminPanelProps) {
     notify("Abriendo WhatsApp para responder");
   }
 
-  function dismissRequest(id: string) {
-    setRequests((prev) => prev.filter((r) => r.id !== id));
-    notify("Solicitud archivada");
+  function archiveRequest(req: SellRequest) {
+    setRequests((prev) => prev.filter((r) => r.id !== req.id));
+    setArchivedRequests((prev) => [req, ...prev]);
+    notify(`Solicitud archivada`, () => {
+      setArchivedRequests((prev) => prev.filter((r) => r.id !== req.id));
+      setRequests((prev) => [req, ...prev]);
+      setTab("activo");
+      notify("Solicitud restaurada");
+    });
+  }
+
+  function restoreRequest(req: SellRequest) {
+    setArchivedRequests((prev) => prev.filter((r) => r.id !== req.id));
+    setRequests((prev) => [req, ...prev]);
+    setTab("activo");
+    notify("Solicitud devuelta a pendientes");
   }
 
   return (
@@ -167,106 +205,157 @@ export function AdminPanel({ initialUnits, initialRequests }: AdminPanelProps) {
       </div>
 
       <div className="mb-6 grid grid-cols-3 gap-3">
-        <Stat value={available} label="En stock" accent="emerald" />
-        <Stat value={sold} label="Vendidos" accent="red" />
+        <Stat value={activeInventory.length} label="En stock" accent="emerald" />
+        <Stat value={soldInventory.length} label="Vendidos" accent="red" />
         <Stat value={requests.length} label="Solicitudes" accent="amber" />
       </div>
 
-      <PrimaryButton
-        type="button"
-        onClick={openAdd}
-        className="mb-6 inline-flex items-center gap-2"
-      >
-        <Plus className="h-4 w-4" />
-        Añadir iPhone
-      </PrimaryButton>
+      <div className="mb-6 flex gap-2 rounded-xl border border-border bg-card p-1">
+        <TabButton active={tab === "activo"} onClick={() => setTab("activo")}>
+          Activo
+        </TabButton>
+        <TabButton active={tab === "archivadas"} onClick={() => setTab("archivadas")}>
+          Archivadas
+          {archivedCount > 0 && (
+            <span className="ml-1.5 rounded-full bg-muted/20 px-1.5 py-0.5 text-[10px]">
+              {archivedCount}
+            </span>
+          )}
+        </TabButton>
+      </div>
 
-      <section className="mb-8">
-        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted">
-          Inventario
-        </h2>
-        <Card className="!p-0 divide-y divide-border">
-          {inventory.map((unit) => (
-            <div key={unit.id} className="flex items-start justify-between gap-4 p-5">
-              <div>
-                <p className="font-semibold">
-                  {unit.model} · {unit.condition}
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  {unit.storage} · Bat. {unit.battery}% · {formatPrice(unit.price)}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Action icon={Pencil} label="Editar" onClick={() => openEdit(unit)} />
-                  {unit.status !== "sold" && (
-                    <Action
-                      icon={CheckCircle2}
-                      label="Marcar vendido"
-                      primary
-                      onClick={() => markSold(unit.id)}
-                    />
-                  )}
-                </div>
-              </div>
-              <StatusBadge status={unit.status} />
-            </div>
-          ))}
-        </Card>
-      </section>
+      {tab === "activo" ? (
+        <>
+          <PrimaryButton
+            type="button"
+            onClick={openAdd}
+            className="mb-6 inline-flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Añadir iPhone
+          </PrimaryButton>
 
-      <section>
-        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted">
-          Solicitudes de venta
-        </h2>
-        <div className="space-y-3">
-          {requests.length === 0 ? (
-            <Card className="!p-6 text-center text-sm text-muted">
-              No hay solicitudes pendientes
+          <section className="mb-8">
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted">
+              Inventario activo
+            </h2>
+            <Card className="!p-0 divide-y divide-border">
+              {activeInventory.length === 0 ? (
+                <p className="p-6 text-center text-sm text-muted">No hay unidades en stock</p>
+              ) : (
+                activeInventory.map((unit) => (
+                  <InventoryRow
+                    key={unit.id}
+                    unit={unit}
+                    onEdit={() => openEdit(unit)}
+                    onMarkSold={() => markSold(unit.id)}
+                  />
+                ))
+              )}
             </Card>
-          ) : (
-            requests.map((req) => (
-              <Card key={req.id} className="!p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-semibold">
-                      {req.model} · {req.storage}
-                    </p>
-                    <p className="mt-1 text-sm text-muted">
-                      Bat. {req.battery}% · {req.condition}
-                    </p>
-                    <p className="mt-1 text-xs text-muted">
-                      {req.box ? "Con caja" : "Sin caja"} ·{" "}
-                      {req.charger ? "Con cargador" : "Sin cargador"} ·{" "}
-                      {req.invoice ? "Con factura" : "Sin factura"} · {req.time}
-                    </p>
-                  </div>
-                  <Inbox className="h-4 w-4 shrink-0 text-muted" />
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Action
-                    icon={ImageIcon}
-                    label="Ver fotos"
-                    onClick={() => {
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted">
+              Solicitudes de venta
+            </h2>
+            <div className="space-y-3">
+              {requests.length === 0 ? (
+                <Card className="!p-6 text-center text-sm text-muted">
+                  No hay solicitudes pendientes
+                </Card>
+              ) : (
+                requests.map((req) => (
+                  <RequestCard
+                    key={req.id}
+                    req={req}
+                    onPhotos={() => {
                       setPhotoRequest(req);
                       setModal("photos");
                     }}
+                    onRespond={() => respondWhatsApp(req)}
+                    onArchive={() => archiveRequest(req)}
                   />
-                  <Action
-                    icon={Pencil}
-                    label="Responder"
-                    primary
-                    onClick={() => respondWhatsApp(req)}
-                  />
-                  <Action
-                    icon={X}
-                    label="Archivar"
-                    onClick={() => dismissRequest(req.id)}
-                  />
-                </div>
-              </Card>
-            ))
-          )}
-        </div>
-      </section>
+                ))
+              )}
+            </div>
+          </section>
+        </>
+      ) : (
+        <section className="space-y-8">
+          <div>
+            <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-muted">
+              <Archive className="h-4 w-4" />
+              iPhones vendidos
+            </h2>
+            <Card className="!p-0 divide-y divide-border">
+              {soldInventory.length === 0 ? (
+                <p className="p-6 text-center text-sm text-muted">No hay unidades vendidas</p>
+              ) : (
+                soldInventory.map((unit) => (
+                  <div key={unit.id} className="flex items-start justify-between gap-4 p-5">
+                    <div>
+                      <p className="font-semibold">
+                        {unit.model} · {unit.condition}
+                      </p>
+                      <p className="mt-1 text-sm text-muted">
+                        {unit.storage} · Bat. {unit.battery}% · {formatPrice(unit.price)}
+                      </p>
+                      <div className="mt-3">
+                        <Action
+                          icon={Undo2}
+                          label="Deshacer venta"
+                          primary
+                          onClick={() => restoreSold(unit.id)}
+                        />
+                      </div>
+                    </div>
+                    <StatusBadge status="sold" />
+                  </div>
+                ))
+              )}
+            </Card>
+          </div>
+
+          <div>
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted">
+              Solicitudes archivadas
+            </h2>
+            <div className="space-y-3">
+              {archivedRequests.length === 0 ? (
+                <Card className="!p-6 text-center text-sm text-muted">
+                  No hay solicitudes archivadas
+                </Card>
+              ) : (
+                archivedRequests.map((req) => (
+                  <Card key={req.id} className="!p-5 opacity-90">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold">
+                          {req.model} · {req.storage}
+                        </p>
+                        <p className="mt-1 text-sm text-muted">
+                          Bat. {req.battery}% · {req.condition}
+                        </p>
+                        <p className="mt-1 text-xs text-muted">{req.time}</p>
+                      </div>
+                      <Archive className="h-4 w-4 shrink-0 text-muted" />
+                    </div>
+                    <div className="mt-3">
+                      <Action
+                        icon={RotateCcw}
+                        label="Restaurar"
+                        primary
+                        onClick={() => restoreRequest(req)}
+                      />
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {(modal === "add" || modal === "edit") && (
         <Modal
@@ -376,11 +465,112 @@ export function AdminPanel({ initialUnits, initialRequests }: AdminPanelProps) {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-medium shadow-lg">
-          {toast}
+        <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-medium shadow-lg">
+          <span>{toast.message}</span>
+          {toast.undo && (
+            <button
+              type="button"
+              onClick={() => {
+                toast.undo?.();
+                setToast(null);
+              }}
+              className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent"
+            >
+              <Undo2 className="h-3 w-3" />
+              Deshacer
+            </button>
+          )}
         </div>
       )}
     </>
+  );
+}
+
+function InventoryRow({
+  unit,
+  onEdit,
+  onMarkSold,
+}: {
+  unit: iPhoneUnit;
+  onEdit: () => void;
+  onMarkSold: () => void;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4 p-5">
+      <div>
+        <p className="font-semibold">
+          {unit.model} · {unit.condition}
+        </p>
+        <p className="mt-1 text-sm text-muted">
+          {unit.storage} · Bat. {unit.battery}% · {formatPrice(unit.price)}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Action icon={Pencil} label="Editar" onClick={onEdit} />
+          <Action icon={CheckCircle2} label="Marcar vendido" primary onClick={onMarkSold} />
+        </div>
+      </div>
+      <StatusBadge status={unit.status} />
+    </div>
+  );
+}
+
+function RequestCard({
+  req,
+  onPhotos,
+  onRespond,
+  onArchive,
+}: {
+  req: SellRequest;
+  onPhotos: () => void;
+  onRespond: () => void;
+  onArchive: () => void;
+}) {
+  return (
+    <Card className="!p-5">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="font-semibold">
+            {req.model} · {req.storage}
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            Bat. {req.battery}% · {req.condition}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            {req.box ? "Con caja" : "Sin caja"} ·{" "}
+            {req.charger ? "Con cargador" : "Sin cargador"} ·{" "}
+            {req.invoice ? "Con factura" : "Sin factura"} · {req.time}
+          </p>
+        </div>
+        <Inbox className="h-4 w-4 shrink-0 text-muted" />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Action icon={ImageIcon} label="Ver fotos" onClick={onPhotos} />
+        <Action icon={Pencil} label="Responder" primary onClick={onRespond} />
+        <Action icon={Archive} label="Archivar" onClick={onArchive} />
+      </div>
+    </Card>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex flex-1 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+        active ? "bg-accent text-white shadow-md" : "text-muted hover:text-foreground"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 

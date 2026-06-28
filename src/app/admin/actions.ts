@@ -5,24 +5,25 @@ import { redirect } from "next/navigation";
 import {
   ADMIN_COOKIE,
   adminCookieOptions,
-  getAdminAccessCode,
-  getAdminSessionToken,
+  clearAdminCookieOptions,
+  createAdminSessionToken,
+  verifyAccessCode,
 } from "@/lib/admin-auth";
 
 export async function adminLogin(formData: FormData) {
-  const code = String(formData.get("code") ?? "").trim();
+  const code = String(formData.get("code") ?? "");
 
-  if (!code || code !== getAdminAccessCode()) {
+  if (!verifyAccessCode(code)) {
     redirect("/admin?error=auth");
   }
 
   const cookieStore = await cookies();
-  cookieStore.set(ADMIN_COOKIE, getAdminSessionToken(), adminCookieOptions());
+  cookieStore.set(ADMIN_COOKIE, createAdminSessionToken(), adminCookieOptions());
   redirect("/admin");
 }
 
 export async function adminLogout() {
   const cookieStore = await cookies();
-  cookieStore.delete(ADMIN_COOKIE);
+  cookieStore.set(ADMIN_COOKIE, "", clearAdminCookieOptions());
   redirect("/admin");
 }

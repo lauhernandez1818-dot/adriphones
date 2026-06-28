@@ -2,6 +2,8 @@ import { AdminGate } from "@/components/admin-gate";
 import { AdminDashboard } from "@/components/admin-dashboard";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPage({
   searchParams,
 }: {
