@@ -76,7 +76,7 @@ export function PageShell({
       <SiteHeader />
       {admin && (
         <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center text-xs text-amber-600 dark:text-amber-300">
-          Panel de administración · Boceto V1
+          Panel de administración · Acceso restringido · Boceto V1
         </div>
       )}
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">{children}</main>

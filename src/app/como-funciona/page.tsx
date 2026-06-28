@@ -11,7 +11,7 @@ const steps = [
   },
   {
     title: "3. Tú gestionas desde el móvil",
-    text: "Panel admin para añadir, editar y marcar vendido en segundos.",
+    text: "Panel admin protegido por código: añadir, editar y marcar vendido en segundos.",
   },
   {
     title: "4. Compramos iPhones también",
