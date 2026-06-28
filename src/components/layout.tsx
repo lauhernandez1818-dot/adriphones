@@ -152,6 +152,25 @@ export function GhostButton({
   );
 }
 
+export function WhatsAppButton({
+  children,
+  className = "",
+  href,
+  ...props
+}: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#25D366] bg-[#25D366]/10 py-3.5 text-sm font-semibold text-[#128C7E] transition hover:bg-[#25D366] hover:text-white dark:border-[#25D366] dark:bg-[#25D366]/20 dark:text-[#5eead4] dark:hover:bg-[#25D366] dark:hover:text-white ${className}`}
+      {...props}
+    >
+      {children}
+    </a>
+  );
+}
+
 export function Chip({
   active,
   children,

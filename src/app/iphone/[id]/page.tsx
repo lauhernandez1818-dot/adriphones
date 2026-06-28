@@ -12,7 +12,7 @@ import {
   MessageCircle,
   CreditCard,
 } from "lucide-react";
-import { PageShell, PrimaryButton, Card } from "@/components/layout";
+import { PageShell, PrimaryButton, Card, WhatsAppButton } from "@/components/layout";
 import { PhoneGallery } from "@/components/phone-card";
 import { formatPrice, getUnit } from "@/lib/data";
 import { getUnitMedia } from "@/lib/media";
@@ -44,7 +44,7 @@ export default async function iPhoneDetailPage({
     <PageShell>
       <Link
         href="/"
-        className="mb-6 inline-flex items-center gap-2 text-sm text-[#0071e3] hover:underline"
+        className="mb-6 inline-flex items-center gap-2 text-sm text-accent hover:underline"
       >
         <ArrowLeft className="h-4 w-4" />
         Volver a la tienda
@@ -57,10 +57,10 @@ export default async function iPhoneDetailPage({
         />
 
         <div>
-          <p className="text-sm font-medium text-[#0071e3]">{unit.condition}</p>
+          <p className="text-sm font-medium text-accent">{unit.condition}</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight">{unit.model}</h1>
           {unit.warranty && (
-            <p className="mt-1 text-sm text-[#86868b]">{unit.warranty}</p>
+            <p className="mt-1 text-sm text-muted">{unit.warranty}</p>
           )}
 
           <p className="mt-6 text-4xl font-bold">{formatPrice(unit.price)}</p>
@@ -69,11 +69,11 @@ export default async function iPhoneDetailPage({
             {specs.map(({ icon: Icon, label, value }) => (
               <div
                 key={label}
-                className="flex items-start gap-3 border-b border-[#d2d2d7]/60 px-5 py-4 last:border-0"
+                className="flex items-start gap-3 border-b border-border px-5 py-4 last:border-0"
               >
-                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#86868b]" />
+                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-muted" />
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#86868b]">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                     {label}
                   </p>
                   <p className="mt-0.5 text-sm font-medium">{value}</p>
@@ -88,18 +88,13 @@ export default async function iPhoneDetailPage({
                 <CreditCard className="h-4 w-4" />
                 Comprar / Reservar
               </PrimaryButton>
-              <a
-                href="https://wa.me/34600000000"
-                target="_blank"
-                rel="noreferrer"
-                className="flex w-full items-center justify-center gap-2 rounded-full border border-[#d2d2d7] py-3 text-sm font-semibold text-[#1d1d1f] transition hover:bg-white"
-              >
+              <WhatsAppButton href="https://wa.me/34600000000">
                 <MessageCircle className="h-4 w-4" />
                 Consultar por WhatsApp
-              </a>
+              </WhatsAppButton>
             </div>
           ) : (
-            <p className="mt-6 rounded-xl bg-[#e8e8ed] px-4 py-3 text-center text-sm text-[#86868b]">
+            <p className="mt-6 rounded-xl bg-background px-4 py-3 text-center text-sm text-muted">
               Esta unidad ya no está disponible
             </p>
           )}

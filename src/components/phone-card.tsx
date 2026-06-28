@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ProductVideo } from "@/components/product-video";
 import type { iPhoneUnit } from "@/lib/data";
 import { formatPrice } from "@/lib/data";
 import type { UnitMedia } from "@/lib/media";
@@ -75,18 +76,10 @@ export function PhoneGallery({ media, alt }: { media: UnitMedia; alt: string }) 
   return (
     <div className="space-y-4">
       {media.cover?.endsWith(".mp4") && (
-        <div className="overflow-hidden rounded-2xl bg-black">
-          <video
-            src={media.cover}
-            className="aspect-[9/16] w-full object-cover sm:aspect-video sm:max-h-[480px]"
-            controls
-            playsInline
-            preload="metadata"
-          />
-        </div>
+        <ProductVideo src={media.cover} poster={media.ficha} />
       )}
       {media.ficha && (
-        <div className="overflow-hidden rounded-2xl border border-[#d2d2d7]/80 bg-black">
+        <div className="overflow-hidden rounded-2xl border border-border bg-black">
           <Image
             src={media.ficha}
             alt={alt}
@@ -98,7 +91,7 @@ export function PhoneGallery({ media, alt }: { media: UnitMedia; alt: string }) 
         </div>
       )}
       {!media.cover && !media.ficha && (
-        <div className="flex h-64 items-center justify-center rounded-2xl bg-[#e8e8ed] text-[#86868b]">
+        <div className="flex h-64 items-center justify-center rounded-2xl bg-background text-muted">
           Sin fotos
         </div>
       )}
